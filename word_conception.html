@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Word Conception</title>
+    <link rel="stylesheet" href="styles.css">
+
+<style>
+:root {
+  --scale: 1;
+  --pan-x: 0px;
+  --pan-y: 0px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #22242e;
+
+  touch-action: none;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='277.128' viewBox='0 0 160 277.128'%3E%3Cpath d='M0 0l160 277.128M0 277.128L160 0' stroke='%23677076' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-position: var(--pan-x) var(--pan-y);
+  background-size: calc(160px * var(--scale)) calc(277.128px * var(--scale));
+
+  cursor: grab;
+  user-select: none;
+}
+
+body.is-dragging {
+  cursor: grabbing;
+}
+
+/* ----------------- 左上角專案名稱 ----------------- */
+.title-bar {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1000;
+}
+
+.title-input {
+  height: 36px;
+  background: #2e313d;
+  color: #ffffff;
+  border: 1px solid #677076;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: bold;
+  outline: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s, background-color 0.2s;
+  width: 160px;
+  display: flex;
+  align-items: center;
+}
+
+.title-input:focus {
+  border-color: #4a90e2;
+  background-color: #383c4a;
+}
+
+/* ----------------- 右上角工具列 ----------------- */
+.toolbar {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  height: 36px;
+  background: #2e313d;
+  color: #e0e0e0;
+  border: 1px solid #677076;
+  border-radius: 6px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-danger {
+  background: #3a2529;
+  border-color: #a84242;
+  color: #ff9e9e;
+}
+
+.btn-danger:active {
+  background: #4a2d32;
+}
+
+/* ----------------- 退出確認 Modal 彈出視窗 ----------------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-box {
+  background: #2e313d;
+  border: 1px solid #677076;
+  border-radius: 10px;
+  padding: 20px;
+  width: 300px;
+  max-width: 85vw;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  color: #e0e0e0;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.modal-desc {
+  font-size: 13px;
+  color: #a0a6b5;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-modal-cancel {
+  background: transparent;
+  border: 1px solid #677076;
+  color: #e0e0e0;
+  flex: 1;
+}
+
+.btn-modal-confirm {
+  background: #e74c3c;
+  border: 1px solid #e74c3c;
+  color: #ffffff;
+  flex: 1;
+}
+
+/* ----------------- 文字方塊圖層 ----------------- */
+#nodes-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transform: translate(var(--pan-x), var(--pan-y)) scale(var(--scale));
+  pointer-events: none;
+}
+
+.grid-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.grid-input {
+  width: 65px;
+  height: 30px;
+  background: #2e313d;
+  color: #e0e0e0;
+  border: 1px solid #677076;
+  border-radius: 6px;
+  padding: 0 4px;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.grid-input:focus {
+  border-color: #4a90e2;
+  background-color: #383c4a;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- 左上角專案名稱修改框 -->
+<div class="title-bar">
+  <input type="text" id="project-title" class="title-input" value="未命名專案" placeholder="輸入專案名稱..." onchange="autoSave()" onkeydown="if(event.key==='Enter') this.blur()">
+</div>
+
+<!-- 右上角工具列 -->
+<div class="toolbar">
+  <button class="btn" onclick="exportData()">匯出</button>
+  <button class="btn" onclick="document.getElementById('file-input').click()">匯入</button>
+  <button class="btn btn-danger" onclick="showExitModal()">退出</button>
+  <input type="file" id="file-input" accept=".json" style="display: none;" onchange="importData(event)">
+</div>
+
+<!-- 退出確認 Modal 視窗 -->
+<div class="modal-overlay" id="exit-modal">
+  <div class="modal-box">
+    <div class="modal-title">確定要退出專案？</div>
+    <div class="modal-desc">退出將會清空畫布與暫存資料。請確認是否已點選「匯出」完成儲存！</div>
+    <div class="modal-actions">
+      <button class="btn btn-modal-cancel" onclick="closeExitModal()">取消</button>
+      <button class="btn btn-modal-confirm" onclick="confirmExit()">確認退出</button>
+    </div>
+  </div>
+</div>
+
+<div id="nodes-layer"></div>
+
+<script>
+  let scale = 1;
+  let panX = 0;
+  let panY = 0;
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+
+  let initialPinchDist = null;
+  let initialScale = 1;
+  let lastTapTime = 0;
+
+  const root = document.documentElement;
+  const nodesLayer = document.getElementById('nodes-layer');
+  const projectTitleInput = document.getElementById('project-title');
+  const exitModal = document.getElementById('exit-modal');
+  const nodesMap = new Map();
+
+  const COL_WIDTH = 160;
+  const ROW_HEIGHT = 138.564;
+  const HALF_COL = COL_WIDTH / 2;
+
+  // 判斷是否為 UI 互動區域（防止誤觸新增文字框或觸發畫布拖曳）
+  function isUIElement(target) {
+    return target.tagName === 'INPUT' || target.closest('.toolbar') || target.closest('.title-bar') || target.closest('.modal-overlay');
+  }
+
+  // ----------------- 退出確認彈窗邏輯 -----------------
+
+  function showExitModal() {
+    exitModal.classList.add('active');
+  }
+
+  function closeExitModal() {
+    exitModal.classList.remove('active');
+  }
+
+  function confirmExit() {
+    closeExitModal();
+    
+    // 清空畫布與資料 Map
+    nodesLayer.innerHTML = '';
+    nodesMap.clear();
+
+    // 清除 LocalStorage 自動備份
+    localStorage.removeItem('word_conception_data');
+
+    // 重置專案名稱與視角
+    projectTitleInput.value = '未命名專案';
+    scale = 1;
+    panX = 0;
+    panY = 0;
+    updateView();
+  }
+
+  // 防護機制：用戶關閉分頁、重新整理或上一頁時的預防提醒
+  window.addEventListener('beforeunload', (e) => {
+    if (nodesMap.size > 0) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  // ----------------- 桌上型電腦（滑鼠事件） -----------------
+
+  window.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    zoomAtPoint(e.clientX, e.clientY, zoomFactor);
+  }, { passive: false });
+
+  window.addEventListener('mousedown', (e) => {
+    if (e.button !== 0 || isUIElement(e.target)) return;
+    isDragging = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    document.body.classList.add('is-dragging');
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    updateView();
+  });
+
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    document.body.classList.remove('is-dragging');
+    autoSave();
+  });
+
+  window.addEventListener('dblclick', (e) => {
+    if (isUIElement(e.target)) return;
+    handleGridAdd(e.clientX, e.clientY);
+  });
+
+  // ----------------- 移動端（觸控 Touch 事件） -----------------
+
+  window.addEventListener('touchstart', (e) => {
+    if (isUIElement(e.target)) return;
+
+    if (e.touches.length === 1) {
+      isDragging = true;
+      startX = e.touches[0].clientX - panX;
+      startY = e.touches[0].clientY - panY;
+
+      const now = Date.now();
+      if (now - lastTapTime < 300) {
+        handleGridAdd(e.touches[0].clientX, e.touches[0].clientY);
+      }
+      lastTapTime = now;
+
+    } else if (e.touches.length === 2) {
+      isDragging = false;
+      initialPinchDist = getTouchDist(e.touches);
+      initialScale = scale;
+    }
+  }, { passive: false });
+
+  window.addEventListener('touchmove', (e) => {
+    if (isUIElement(e.target)) return;
+    e.preventDefault();
+
+    if (e.touches.length === 1 && isDragging) {
+      panX = e.touches[0].clientX - startX;
+      panY = e.touches[0].clientY - startY;
+      updateView();
+    } else if (e.touches.length === 2 && initialPinchDist) {
+      const currentDist = getTouchDist(e.touches);
+      const zoomFactor = currentDist / initialPinchDist;
+      
+      const center = getTouchCenter(e.touches);
+      const targetScale = Math.min(Math.max(0.3, initialScale * zoomFactor), 5);
+      
+      const ratio = targetScale / scale;
+      panX = center.x - (center.x - panX) * ratio;
+      panY = center.y - (center.y - panY) * ratio;
+      scale = targetScale;
+      updateView();
+    }
+  }, { passive: false });
+
+  window.addEventListener('touchend', () => {
+    isDragging = false;
+    initialPinchDist = null;
+    autoSave();
+  });
+
+  // ----------------- 幾何與網格輔助函式 -----------------
+
+  function zoomAtPoint(clientX, clientY, factor) {
+    const newScale = Math.min(Math.max(0.3, scale * factor), 5);
+    if (newScale === scale) return;
+
+    const ratio = newScale / scale;
+    panX = clientX - (clientX - panX) * ratio;
+    panY = clientY - (clientY - panY) * ratio;
+    scale = newScale;
+    updateView();
+  }
+
+  function handleGridAdd(clientX, clientY) {
+    const worldX = (clientX - panX) / scale;
+    const worldY = (clientY - panY) / scale;
+
+    const r = Math.round(worldY / ROW_HEIGHT);
+    const snapY = r * ROW_HEIGHT;
+
+    let snapX;
+    if (Math.abs(r) % 2 === 0) {
+      snapX = Math.round(worldX / COL_WIDTH) * COL_WIDTH;
+    } else {
+      snapX = Math.round((worldX - HALF_COL) / COL_WIDTH) * COL_WIDTH + HALF_COL;
+    }
+
+    const key = `${Math.round(snapX)},${Math.round(snapY)}`;
+
+    if (nodesMap.has(key)) {
+      nodesMap.get(key).querySelector('input').focus();
+    } else {
+      createNode(snapX, snapY, key);
+    }
+  }
+
+  function getTouchDist(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function getTouchCenter(touches) {
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2
+    };
+  }
+
+  function createNode(x, y, key, text = '') {
+    const node = document.createElement('div');
+    node.className = 'grid-node';
+    node.style.left = `${x}px`;
+    node.style.top = `${y}px`;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'grid-input';
+    input.maxLength = 4;
+    input.placeholder = '文字';
+    input.value = text;
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === 'Escape') input.blur();
+    });
+
+    input.addEventListener('blur', () => {
+      if (input.value.trim() === '') {
+        node.remove();
+        nodesMap.delete(key);
+      }
+      autoSave();
+    });
+
+    node.appendChild(input);
+    nodesLayer.appendChild(node);
+    nodesMap.set(key, node);
+
+    if (!text) setTimeout(() => input.focus(), 10);
+  }
+
+  function updateView() {
+    root.style.setProperty('--scale', scale);
+    root.style.setProperty('--pan-x', `${panX}px`);
+    root.style.setProperty('--pan-y', `${panY}px`);
+  }
+
+  // ----------------- 資料儲存與檔名管理 -----------------
+
+  function getDataObject() {
+    const nodesData = [];
+    nodesMap.forEach((nodeEl, key) => {
+      const input = nodeEl.querySelector('input');
+      const text = input.value.trim();
+      if (text) {
+        nodesData.push({ key, x: parseFloat(nodeEl.style.left), y: parseFloat(nodeEl.style.top), text });
+      }
+    });
+
+    const title = projectTitleInput.value.trim() || '未命名專案';
+
+    return { title, panX, panY, scale, nodes: nodesData };
+  }
+
+  function exportData() {
+    const data = getDataObject();
+    const rawTitle = data.title;
+    const safeTitle = rawTitle.replace(/[/\\?%*:|"<>]/g, '_');
+    const dateStr = new Date().toISOString().slice(0, 10);
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeTitle}_${dateStr}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        loadDataObject(JSON.parse(evt.target.result));
+        autoSave();
+      } catch (err) {
+        alert('檔案讀取失敗，請確認格式是否正確！');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  function loadDataObject(data) {
+    nodesLayer.innerHTML = '';
+    nodesMap.clear();
+
+    projectTitleInput.value = data.title || '未命名專案';
+
+    if (data.scale !== undefined) scale = data.scale;
+    if (data.panX !== undefined) panX = data.panX;
+    if (data.panY !== undefined) panY = data.panY;
+    updateView();
+
+    if (Array.isArray(data.nodes)) {
+      data.nodes.forEach(n => createNode(n.x, n.y, n.key, n.text));
+    }
+  }
+
+  function autoSave() {
+    localStorage.setItem('word_conception_data', JSON.stringify(getDataObject()));
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('word_conception_data');
+    if (saved) {
+      try { loadDataObject(JSON.parse(saved)); } catch (e) {}
+    }
+  });
+</script>
+    
+</body>
+
+</html>
