@@ -40,7 +40,6 @@ body.is-dragging {
   cursor: grabbing;
 }
 
-/* ----------------- 左上角專案名稱 ----------------- */
 .title-bar {
   position: fixed;
   top: 15px;
@@ -70,7 +69,6 @@ body.is-dragging {
   background-color: #383c4a;
 }
 
-/* ----------------- 右上角工具列 ----------------- */
 .toolbar {
   position: fixed;
   top: 15px;
@@ -111,7 +109,6 @@ body.is-dragging {
   background: #4a2d32;
 }
 
-/* ----------------- 退出確認 Modal 彈出視窗 ----------------- */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -180,7 +177,6 @@ body.is-dragging {
   flex: 1;
 }
 
-/* ----------------- 文字方塊圖層 ----------------- */
 #nodes-layer {
   position: absolute;
   top: 0;
@@ -223,12 +219,10 @@ body.is-dragging {
 
 <body>
 
-<!-- 左上角專案名稱修改框 -->
 <div class="title-bar">
   <input type="text" id="project-title" class="title-input" value="未命名專案" placeholder="輸入專案名稱..." onchange="autoSave()" onkeydown="if(event.key==='Enter') this.blur()">
 </div>
 
-<!-- 右上角工具列 -->
 <div class="toolbar">
   <button class="btn" onclick="exportData()">匯出</button>
   <button class="btn" onclick="document.getElementById('file-input').click()">匯入</button>
@@ -236,7 +230,6 @@ body.is-dragging {
   <input type="file" id="file-input" accept=".json" style="display: none;" onchange="importData(event)">
 </div>
 
-<!-- 退出確認 Modal 視窗 -->
 <div class="modal-overlay" id="exit-modal">
   <div class="modal-box">
     <div class="modal-title">確定要退出專案？</div>
@@ -272,12 +265,9 @@ body.is-dragging {
   const ROW_HEIGHT = 138.564;
   const HALF_COL = COL_WIDTH / 2;
 
-  // 判斷是否為 UI 互動區域（防止誤觸新增文字框或觸發畫布拖曳）
   function isUIElement(target) {
     return target.tagName === 'INPUT' || target.closest('.toolbar') || target.closest('.title-bar') || target.closest('.modal-overlay');
   }
-
-  // ----------------- 退出確認彈窗邏輯 -----------------
 
   function showExitModal() {
     exitModal.classList.add('active');
@@ -290,14 +280,11 @@ body.is-dragging {
   function confirmExit() {
     closeExitModal();
     
-    // 清空畫布與資料 Map
     nodesLayer.innerHTML = '';
     nodesMap.clear();
 
-    // 清除 LocalStorage 自動備份
     localStorage.removeItem('word_conception_data');
 
-    // 重置專案名稱與視角
     projectTitleInput.value = '未命名專案';
     scale = 1;
     panX = 0;
@@ -305,15 +292,12 @@ body.is-dragging {
     updateView();
   }
 
-  // 防護機制：用戶關閉分頁、重新整理或上一頁時的預防提醒
   window.addEventListener('beforeunload', (e) => {
     if (nodesMap.size > 0) {
       e.preventDefault();
       e.returnValue = '';
     }
   });
-
-  // ----------------- 桌上型電腦（滑鼠事件） -----------------
 
   window.addEventListener('wheel', (e) => {
     e.preventDefault();
@@ -346,8 +330,6 @@ body.is-dragging {
     if (isUIElement(e.target)) return;
     handleGridAdd(e.clientX, e.clientY);
   });
-
-  // ----------------- 移動端（觸控 Touch 事件） -----------------
 
   window.addEventListener('touchstart', (e) => {
     if (isUIElement(e.target)) return;
@@ -398,8 +380,6 @@ body.is-dragging {
     initialPinchDist = null;
     autoSave();
   });
-
-  // ----------------- 幾何與網格輔助函式 -----------------
 
   function zoomAtPoint(clientX, clientY, factor) {
     const newScale = Math.min(Math.max(0.3, scale * factor), 5);
