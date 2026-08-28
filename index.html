@@ -540,6 +540,9 @@ body.is-dragging {
   });
 </script>
 
+    <!-- ============================================
+         iPadOS 專用優化版：圖形匯出功能
+         ============================================ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
     (function() {
@@ -560,7 +563,7 @@ body.is-dragging {
 
             const imgBtn = document.createElement('button');
             imgBtn.className = 'custom-image-export-btn';
-            imgBtn.innerHTML = '匯出圖片';
+            imgBtn.innerHTML = '📷 匯出圖片';
             imgBtn.style.cssText = `
                 background-color: #27ae60 !important;
                 color: #ffffff !important;
@@ -587,7 +590,7 @@ body.is-dragging {
             imgBtn.addEventListener('click', async () => {
                 imgBtn.disabled = true;
                 const oldText = imgBtn.innerHTML;
-                imgBtn.innerHTML = '繪製中...';
+                imgBtn.innerHTML = '⌛ 繪製中...';
 
                 try {
                     imgBtn.style.visibility = 'hidden';
@@ -600,21 +603,42 @@ body.is-dragging {
                         logging: false
                     });
 
-                    const imgData = canvas.toDataURL('image/png');
-                    
-                    const link = document.createElement('a');
-                    const dateStr = new Date().toISOString().slice(0, 10);
-                    link.download = `Word_Conception_${dateStr}.png`;
-                    link.href = imgData;
-                    
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    // 將 Canvas 轉為 Blob 格式，以完美相容 iOS Safari
+                    canvas.toBlob((blob) => {
+                        imgBtn.style.visibility = 'visible';
+                        imgBtn.disabled = false;
+                        imgBtn.innerHTML = oldText;
+
+                        if (!blob) {
+                            alert('圖片產生失敗');
+                            return;
+                        }
+
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        // 嘗試直接觸發 iOS 下載
+                        const link = document.createElement('a');
+                        const dateStr = new Date().toISOString().slice(0, 10);
+                        link.download = `Word_Conception_${dateStr}.png`;
+                        link.href = blobUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+
+                        // 備用方案：若 Safari 阻擋了自動下載，直接在新分頁開啟圖片
+                        setTimeout(() => {
+                            const newWindow = window.open(blobUrl, '_blank');
+                            if (!newWindow) {
+                                // 如果連彈出分頁都被阻擋，直接導向該圖片 Blob 網址
+                                window.location.href = blobUrl;
+                            }
+                        }, 500);
+
+                    }, 'image/png');
 
                 } catch (err) {
                     console.error(err);
                     alert('匯出圖片時發生錯誤：' + err.message);
-                } finally {
                     imgBtn.style.visibility = 'visible';
                     imgBtn.disabled = false;
                     imgBtn.innerHTML = oldText;
@@ -629,6 +653,7 @@ body.is-dragging {
         }
     })();
     </script>
+
     
 </body>
 
