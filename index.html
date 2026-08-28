@@ -583,31 +583,54 @@ body.is-dragging {
     }
   });
 
+Timeout(() => {
+          const newWindow = window.open(blobUrl, '_blank');
+          if (!newWindow) {
+            window.location.href = blobUrl;
+          }
+        }, 500);
+
+      }, 'image/png');
+
+    } catch (err) {
+      console.error(err);
+      alert('匯出圖片時發生錯誤：' + err.message);
+      btn.disabled = false;
+      btn.innerHTML = oldText;
+    }
+  }
+
   // ============================================
-  // 高清圖片匯出核心函數（專為 iPadOS 與動態網格優化）
+  // 高清圖片匯出核心函數（修正頂部白邊與位移問題）
   // ============================================
   async function exportImage() {
     const btn = document.getElementById('export-img-btn');
     btn.disabled = true;
     const oldText = btn.innerHTML;
-    btn.innerHTML = '⌛ 繪製中...';
+    btn.innerHTML = '繪製中...';
 
     try {
       const canvas = await html2canvas(document.body, {
         allowTaint: true,
         useCORS: true,
-        scale: 2, // 2倍高解析度
-        backgroundColor: null,
+        scale: 2,
+        backgroundColor: '#22242e', // 1. 明確指定背景底色，消除白色區塊
+        scrollX: 0,                 // 2. 強制歸零滾動偏移量（解決垂直位移核心）
+        scrollY: 0,
+        x: 0,                       // 3. 精確擷取當前視窗範圍
+        y: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
         logging: false,
         onclone: (clonedDoc) => {
-          // 只隱藏頂部的工具欄與標題列，絕不隱藏 .grid-input (詞語節點)
+          // 4. 改用 display: none 避免佔據 fixed 繪製層
           const toolbar = clonedDoc.querySelector('.toolbar');
           const titleBar = clonedDoc.querySelector('.title-bar');
           const modal = clonedDoc.querySelector('.modal-overlay');
 
-          if (toolbar) toolbar.style.visibility = 'hidden';
-          if (titleBar) titleBar.style.visibility = 'hidden';
-          if (modal) modal.style.visibility = 'hidden';
+          if (toolbar) toolbar.style.display = 'none';
+          if (titleBar) titleBar.style.display = 'none';
+          if (modal) modal.style.display = 'none';
         }
       });
 
@@ -632,7 +655,6 @@ body.is-dragging {
         link.click();
         document.body.removeChild(link);
 
-        // iPad Safari 備用開啟方案
         setTimeout(() => {
           const newWindow = window.open(blobUrl, '_blank');
           if (!newWindow) {
@@ -649,6 +671,7 @@ body.is-dragging {
       btn.innerHTML = oldText;
     }
   }
+    
 </script>
 
 </body>
