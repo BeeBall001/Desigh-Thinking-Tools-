@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Word Conception</title>
-    <link rel="stylesheet" href="styles.css">
     <!-- 引入 html2canvas 程式庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -397,7 +396,6 @@ body.is-dragging {
 
   window.addEventListener('touchmove', (e) => {
     if (isUIElement(e.target)) return;
-    e.preventDefault();
 
     if (e.touches.length === 1 && isDragging) {
       panX = e.touches[0].clientX - startX;
@@ -582,9 +580,6 @@ body.is-dragging {
     }
   });
 
-  // ============================================
-  // 高清圖片匯出核心函數（修復頂部白邊與位移）
-  // ============================================
   async function exportImage() {
     const btn = document.getElementById('export-img-btn');
     btn.disabled = true;
@@ -657,4 +652,3 @@ body.is-dragging {
 </body>
 
 </html>
-
