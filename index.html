@@ -226,7 +226,7 @@ body.is-dragging {
   background-color: #383c4a;
 }
 
-    /* 針對窄螢幕 / 手機版（寬度 650px 以下）調整排版 */
+/* 針對窄螢幕 / 手機版（寬度 650px 以下）調整排版 */
 @media (max-width: 650px) {
   .title-bar {
     top: 10px;
@@ -235,15 +235,15 @@ body.is-dragging {
   }
 
   .title-input {
-    width: 100%; /* 讓命名欄寬度自動延伸填滿第一行 */
+    width: 100%;
   }
 
   .toolbar {
-    top: 52px; /* 將工具欄移至命名欄下方 */
+    top: 52px;
     left: 10px;
     right: 10px;
     justify-content: flex-start;
-    overflow-x: auto; /* 如果按鈕數量太長，支援左右滑動 */
+    overflow-x: auto;
     padding-bottom: 4px;
     white-space: nowrap;
   }
@@ -252,10 +252,9 @@ body.is-dragging {
     height: 32px;
     font-size: 13px;
     padding: 0 10px;
-    flex-shrink: 0; /* 確保按鈕不會在窄螢幕上被擠壓變形 */
+    flex-shrink: 0;
   }
 }
-
 </style>
 
 </head>
@@ -583,47 +582,29 @@ body.is-dragging {
     }
   });
 
-Timeout(() => {
-          const newWindow = window.open(blobUrl, '_blank');
-          if (!newWindow) {
-            window.location.href = blobUrl;
-          }
-        }, 500);
-
-      }, 'image/png');
-
-    } catch (err) {
-      console.error(err);
-      alert('匯出圖片時發生錯誤：' + err.message);
-      btn.disabled = false;
-      btn.innerHTML = oldText;
-    }
-  }
-
   // ============================================
-  // 高清圖片匯出核心函數（修正頂部白邊與位移問題）
+  // 高清圖片匯出核心函數（修復頂部白邊與位移）
   // ============================================
   async function exportImage() {
     const btn = document.getElementById('export-img-btn');
     btn.disabled = true;
     const oldText = btn.innerHTML;
-    btn.innerHTML = '繪製中...';
+    btn.innerHTML = '⌛ 繪製中...';
 
     try {
       const canvas = await html2canvas(document.body, {
         allowTaint: true,
         useCORS: true,
         scale: 2,
-        backgroundColor: '#22242e', // 1. 明確指定背景底色，消除白色區塊
-        scrollX: 0,                 // 2. 強制歸零滾動偏移量（解決垂直位移核心）
+        backgroundColor: '#22242e',
+        scrollX: 0,
         scrollY: 0,
-        x: 0,                       // 3. 精確擷取當前視窗範圍
+        x: 0,
         y: 0,
         width: window.innerWidth,
         height: window.innerHeight,
         logging: false,
         onclone: (clonedDoc) => {
-          // 4. 改用 display: none 避免佔據 fixed 繪製層
           const toolbar = clonedDoc.querySelector('.toolbar');
           const titleBar = clonedDoc.querySelector('.title-bar');
           const modal = clonedDoc.querySelector('.modal-overlay');
@@ -671,9 +652,9 @@ Timeout(() => {
       btn.innerHTML = oldText;
     }
   }
-    
 </script>
 
 </body>
 
 </html>
+
