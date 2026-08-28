@@ -225,6 +225,37 @@ body.is-dragging {
   border-color: #4a90e2;
   background-color: #383c4a;
 }
+
+    /* 針對窄螢幕 / 手機版（寬度 650px 以下）調整排版 */
+@media (max-width: 650px) {
+  .title-bar {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+  }
+
+  .title-input {
+    width: 100%; /* 讓命名欄寬度自動延伸填滿第一行 */
+  }
+
+  .toolbar {
+    top: 52px; /* 將工具欄移至命名欄下方 */
+    left: 10px;
+    right: 10px;
+    justify-content: flex-start;
+    overflow-x: auto; /* 如果按鈕數量太長，支援左右滑動 */
+    padding-bottom: 4px;
+    white-space: nowrap;
+  }
+
+  .btn {
+    height: 32px;
+    font-size: 13px;
+    padding: 0 10px;
+    flex-shrink: 0; /* 確保按鈕不會在窄螢幕上被擠壓變形 */
+  }
+}
+
 </style>
 
 </head>
