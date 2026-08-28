@@ -224,19 +224,19 @@ body.is-dragging {
 </div>
 
 <div class="toolbar">
-  <button class="btn" onclick="exportData()">匯出</button>
-  <button class="btn" onclick="document.getElementById('file-input').click()">匯入</button>
-  <button class="btn btn-danger" onclick="showExitModal()">退出</button>
+  <button class="btn" onclick="exportData()">匯出JSON</button>
+  <button class="btn" onclick="document.getElementById('file-input').click()">匯入JSON</button>
+  <button class="btn btn-danger" onclick="showExitModal()">開新專案</button>
   <input type="file" id="file-input" accept=".json" style="display: none;" onchange="importData(event)">
 </div>
 
 <div class="modal-overlay" id="exit-modal">
   <div class="modal-box">
     <div class="modal-title">確定要退出專案？</div>
-    <div class="modal-desc">退出將會清空畫布與暫存資料。請確認是否已點選「匯出」完成儲存！</div>
+    <div class="modal-desc">退出將會清空畫布與暫存資料。請確認是否已點選「匯出JSON」完成儲存！</div>
     <div class="modal-actions">
       <button class="btn btn-modal-cancel" onclick="closeExitModal()">取消</button>
-      <button class="btn btn-modal-confirm" onclick="confirmExit()">確認退出</button>
+      <button class="btn btn-modal-confirm" onclick="confirmExit()">確認</button>
     </div>
   </div>
 </div>
@@ -541,7 +541,7 @@ body.is-dragging {
 </script>
 
     <!-- ============================================
-         iPadOS 專用優化版：圖形匯出功能
+         iPadOS 專用：純淨版圖形匯出 (自動過濾工具欄與按鈕)
          ============================================ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
@@ -563,7 +563,7 @@ body.is-dragging {
 
             const imgBtn = document.createElement('button');
             imgBtn.className = 'custom-image-export-btn';
-            imgBtn.innerHTML = '📷 匯出圖片';
+            imgBtn.innerHTML = '匯出圖片';
             imgBtn.style.cssText = `
                 background-color: #27ae60 !important;
                 color: #ffffff !important;
@@ -593,19 +593,32 @@ body.is-dragging {
                 imgBtn.innerHTML = '⌛ 繪製中...';
 
                 try {
-                    imgBtn.style.visibility = 'hidden';
-
                     const canvas = await html2canvas(document.body, {
                         allowTaint: true,
                         useCORS: true,
-                        scale: 2,
+                        scale: 2, // 2倍 Retina 清晰度
                         backgroundColor: null,
-                        logging: false
+                        logging: false,
+                        // 關鍵技術：在拍照複製體中，自動隱藏所有 UI 控制元件
+                        onclone: (clonedDoc) => {
+                            // 1. 隱藏所有按鈕（匯出、匯入、退出、匯出圖片等）
+                            clonedDoc.querySelectorAll('button').forEach(el => {
+                                el.style.visibility = 'hidden';
+                            });
+
+                            // 2. 隱藏左上角標題/選單、輸入框及工具欄容器
+                            clonedDoc.querySelectorAll('input, select, .toolbar, .header, .controls, .nav').forEach(el => {
+                                el.style.visibility = 'hidden';
+                            });
+
+                            // 3. 確保自訂匯出按鈕也被隱藏
+                            const customBtn = clonedDoc.querySelector('.custom-image-export-btn');
+                            if (customBtn) customBtn.style.visibility = 'hidden';
+                        }
                     });
 
-                    // 將 Canvas 轉為 Blob 格式，以完美相容 iOS Safari
+                    // 轉為 Blob 格式匯出
                     canvas.toBlob((blob) => {
-                        imgBtn.style.visibility = 'visible';
                         imgBtn.disabled = false;
                         imgBtn.innerHTML = oldText;
 
@@ -616,7 +629,7 @@ body.is-dragging {
 
                         const blobUrl = URL.createObjectURL(blob);
                         
-                        // 嘗試直接觸發 iOS 下載
+                        // 嘗試直接觸發下載
                         const link = document.createElement('a');
                         const dateStr = new Date().toISOString().slice(0, 10);
                         link.download = `Word_Conception_${dateStr}.png`;
@@ -625,11 +638,10 @@ body.is-dragging {
                         link.click();
                         document.body.removeChild(link);
 
-                        // 備用方案：若 Safari 阻擋了自動下載，直接在新分頁開啟圖片
+                        // 備用方案：在新分頁開啟
                         setTimeout(() => {
                             const newWindow = window.open(blobUrl, '_blank');
                             if (!newWindow) {
-                                // 如果連彈出分頁都被阻擋，直接導向該圖片 Blob 網址
                                 window.location.href = blobUrl;
                             }
                         }, 500);
@@ -639,7 +651,6 @@ body.is-dragging {
                 } catch (err) {
                     console.error(err);
                     alert('匯出圖片時發生錯誤：' + err.message);
-                    imgBtn.style.visibility = 'visible';
                     imgBtn.disabled = false;
                     imgBtn.innerHTML = oldText;
                 }
@@ -653,7 +664,6 @@ body.is-dragging {
         }
     })();
     </script>
-
     
 </body>
 
