@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Word Conception</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- 引入 html2canvas 程式庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
 :root {
@@ -97,6 +99,16 @@ body.is-dragging {
 
 .btn:active {
   transform: translateY(1px);
+}
+
+.btn-success {
+  background: #27ae60;
+  border-color: #27ae60;
+  color: #ffffff;
+}
+
+.btn-success:active {
+  background: #219653;
 }
 
 .btn-danger {
@@ -224,6 +236,7 @@ body.is-dragging {
 </div>
 
 <div class="toolbar">
+  <button class="btn btn-success" id="export-img-btn" onclick="exportImage()">匯出圖片</button>
   <button class="btn" onclick="exportData()">匯出JSON</button>
   <button class="btn" onclick="document.getElementById('file-input').click()">匯入JSON</button>
   <button class="btn btn-danger" onclick="showExitModal()">開新專案</button>
@@ -266,7 +279,7 @@ body.is-dragging {
   const HALF_COL = COL_WIDTH / 2;
 
   function isUIElement(target) {
-    return target.tagName === 'INPUT' || target.closest('.toolbar') || target.closest('.title-bar') || target.closest('.modal-overlay');
+    return target.tagName === 'INPUT' && !target.classList.contains('grid-input') || target.closest('.toolbar') || target.closest('.title-bar') || target.closest('.modal-overlay');
   }
 
   function showExitModal() {
@@ -538,133 +551,75 @@ body.is-dragging {
       try { loadDataObject(JSON.parse(saved)); } catch (e) {}
     }
   });
+
+  // ============================================
+  // 高清圖片匯出核心函數（專為 iPadOS 與動態網格優化）
+  // ============================================
+  async function exportImage() {
+    const btn = document.getElementById('export-img-btn');
+    btn.disabled = true;
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '⌛ 繪製中...';
+
+    try {
+      const canvas = await html2canvas(document.body, {
+        allowTaint: true,
+        useCORS: true,
+        scale: 2, // 2倍高解析度
+        backgroundColor: null,
+        logging: false,
+        onclone: (clonedDoc) => {
+          // 只隱藏頂部的工具欄與標題列，絕不隱藏 .grid-input (詞語節點)
+          const toolbar = clonedDoc.querySelector('.toolbar');
+          const titleBar = clonedDoc.querySelector('.title-bar');
+          const modal = clonedDoc.querySelector('.modal-overlay');
+
+          if (toolbar) toolbar.style.visibility = 'hidden';
+          if (titleBar) titleBar.style.visibility = 'hidden';
+          if (modal) modal.style.visibility = 'hidden';
+        }
+      });
+
+      canvas.toBlob((blob) => {
+        btn.disabled = false;
+        btn.innerHTML = oldText;
+
+        if (!blob) {
+          alert('圖片產生失敗');
+          return;
+        }
+
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const rawTitle = projectTitleInput.value.trim() || '未命名專案';
+        const safeTitle = rawTitle.replace(/[/\\?%*:|"<>]/g, '_');
+        const dateStr = new Date().toISOString().slice(0, 10);
+
+        link.download = `${safeTitle}_${dateStr}.png`;
+        link.href = blobUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // iPad Safari 備用開啟方案
+        setTimeout(() => {
+          const newWindow = window.open(blobUrl, '_blank');
+          if (!newWindow) {
+            window.location.href = blobUrl;
+          }
+        }, 500);
+
+      }, 'image/png');
+
+    } catch (err) {
+      console.error(err);
+      alert('匯出圖片時發生錯誤：' + err.message);
+      btn.disabled = false;
+      btn.innerHTML = oldText;
+    }
+  }
 </script>
 
-    <!-- ============================================
-         iPadOS 專用：純淨版圖形匯出 (自動過濾工具欄與按鈕)
-         ============================================ -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script>
-    (function() {
-        if (window.__exportImageInjected) return;
-        window.__exportImageInjected = true;
-
-        function initExportImage() {
-            if (document.querySelector('.custom-image-export-btn')) return;
-
-            let targetBtn = null;
-            const buttons = Array.from(document.querySelectorAll('button, div, a'));
-            for (const btn of buttons) {
-                if (btn.children.length === 0 && btn.textContent.trim() === '匯出') {
-                    targetBtn = btn;
-                    break;
-                }
-            }
-
-            const imgBtn = document.createElement('button');
-            imgBtn.className = 'custom-image-export-btn';
-            imgBtn.innerHTML = '匯出圖片';
-            imgBtn.style.cssText = `
-                background-color: #27ae60 !important;
-                color: #ffffff !important;
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
-                padding: 5px 12px !important;
-                border-radius: 4px !important;
-                cursor: pointer !important;
-                font-size: 14px !important;
-                margin-left: 6px !important;
-                margin-right: 6px !important;
-                transition: all 0.2s ease !important;
-            `;
-
-            if (targetBtn && targetBtn.parentElement) {
-                targetBtn.parentElement.insertBefore(imgBtn, targetBtn.nextSibling);
-            } else {
-                imgBtn.style.position = 'fixed';
-                imgBtn.style.top = '12px';
-                imgBtn.style.right = '220px';
-                imgBtn.style.zIndex = '999999';
-                document.body.appendChild(imgBtn);
-            }
-
-            imgBtn.addEventListener('click', async () => {
-                imgBtn.disabled = true;
-                const oldText = imgBtn.innerHTML;
-                imgBtn.innerHTML = '⌛ 繪製中...';
-
-                try {
-                    const canvas = await html2canvas(document.body, {
-                        allowTaint: true,
-                        useCORS: true,
-                        scale: 2, // 2倍 Retina 清晰度
-                        backgroundColor: null,
-                        logging: false,
-                        // 關鍵技術：在拍照複製體中，自動隱藏所有 UI 控制元件
-                        onclone: (clonedDoc) => {
-                            // 1. 隱藏所有按鈕（匯出、匯入、退出、匯出圖片等）
-                            clonedDoc.querySelectorAll('button').forEach(el => {
-                                el.style.visibility = 'hidden';
-                            });
-
-                            // 2. 隱藏左上角標題/選單、輸入框及工具欄容器
-                            clonedDoc.querySelectorAll('input, select, .toolbar, .header, .controls, .nav').forEach(el => {
-                                el.style.visibility = 'hidden';
-                            });
-
-                            // 3. 確保自訂匯出按鈕也被隱藏
-                            const customBtn = clonedDoc.querySelector('.custom-image-export-btn');
-                            if (customBtn) customBtn.style.visibility = 'hidden';
-                        }
-                    });
-
-                    // 轉為 Blob 格式匯出
-                    canvas.toBlob((blob) => {
-                        imgBtn.disabled = false;
-                        imgBtn.innerHTML = oldText;
-
-                        if (!blob) {
-                            alert('圖片產生失敗');
-                            return;
-                        }
-
-                        const blobUrl = URL.createObjectURL(blob);
-                        
-                        // 嘗試直接觸發下載
-                        const link = document.createElement('a');
-                        const dateStr = new Date().toISOString().slice(0, 10);
-                        link.download = `Word_Conception_${dateStr}.png`;
-                        link.href = blobUrl;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-
-                        // 備用方案：在新分頁開啟
-                        setTimeout(() => {
-                            const newWindow = window.open(blobUrl, '_blank');
-                            if (!newWindow) {
-                                window.location.href = blobUrl;
-                            }
-                        }, 500);
-
-                    }, 'image/png');
-
-                } catch (err) {
-                    console.error(err);
-                    alert('匯出圖片時發生錯誤：' + err.message);
-                    imgBtn.disabled = false;
-                    imgBtn.innerHTML = oldText;
-                }
-            });
-        }
-
-        if (document.readyState === 'interactive' || document.readyState === 'complete') {
-            initExportImage();
-        } else {
-            document.addEventListener('DOMContentLoaded', initExportImage);
-        }
-    })();
-    </script>
-    
 </body>
 
 </html>
