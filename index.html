@@ -541,6 +541,101 @@ body.is-dragging {
     }
   });
 </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toolbar = document.querySelector('.toolbar');
+            if (!toolbar) return;
+
+            const exportBtn = document.createElement('button');
+            exportBtn.className = 'export-image-btn';
+            exportBtn.innerHTML = '匯出圖片';
+            exportBtn.title = '匯出目前的揉合成果為 PNG 圖片';
+
+            const style = document.createElement('style');
+            style.textContent = `
+                .export-image-btn {
+                    background: #27ae60 !important; 
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    margin-left: 10px;
+                    transition: background 0.3s;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .export-image-btn:hover {
+                    background: #219150 !important;
+                }
+                .export-image-btn:disabled {
+                    background: #bdc3c7 !important;
+                    cursor: not-allowed;
+                }
+            `;
+            document.head.appendChild(style);
+
+            toolbar.appendChild(exportBtn);
+
+            exportBtn.addEventListener('click', async () => {
+                exportBtn.disabled = true;
+                exportBtn.innerHTML = '正在產生...';
+
+                const targetArea = document.querySelector('.container');
+
+                if (!targetArea) {
+                    alert('找不到可匯出的區域。');
+                    resetBtn();
+                    return;
+                }
+
+                try {
+                    const canvas = await html2canvas(targetArea, {
+                        allowTaint: true,
+                        useCORS: true,
+                        scale: 2, 
+                        backgroundColor: '#f4f4f4', 
+                        logging: false, 
+                        onclone: (clonedDoc) => {
+                            const clonedTarget = clonedDoc.querySelector('.container');
+                            if (clonedTarget) {
+                                clonedTarget.style.padding = '20px';
+                                clonedTarget.style.boxShadow = 'none'; // 去掉陰影讓圖片更乾淨
+                            }
+                        }
+                    });
+
+                    const imgData = canvas.toDataURL('image/png');
+
+                    const downloadLink = document.createElement('a');
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '');
+                    
+                    downloadLink.download = `Desigh-Thinking-Tools-Export_${timestamp}.png`;
+                    downloadLink.href = imgData;
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+
+                } catch (error) {
+                    console.error('匯出圖片時發生錯誤:', error);
+                    alert('匯出圖片時發生錯誤。這可能是由於安全限制，請嘗試重新整理。');
+                } finally {
+                    resetBtn();
+                }
+
+                function resetBtn() {
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = '匯出圖片';
+                }
+            });
+        });
+    </script>
     
 </body>
 
