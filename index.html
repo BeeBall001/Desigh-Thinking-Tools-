@@ -541,98 +541,93 @@ body.is-dragging {
 </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const toolbar = document.querySelector('.toolbar');
-            if (!toolbar) return;
+    (function() {
+        if (window.__exportImageInjected) return;
+        window.__exportImageInjected = true;
 
-            const exportBtn = document.createElement('button');
-            exportBtn.className = 'export-image-btn';
-            exportBtn.innerHTML = '匯出圖片';
-            exportBtn.title = '匯出目前的揉合成果為 PNG 圖片';
+        function initExportImage() {
+            if (document.querySelector('.custom-image-export-btn')) return;
 
-            const style = document.createElement('style');
-            style.textContent = `
-                .export-image-btn {
-                    background: #27ae60 !important; 
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    margin-left: 10px;
-                    transition: background 0.3s;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
+            let targetBtn = null;
+            const buttons = Array.from(document.querySelectorAll('button, div, a'));
+            for (const btn of buttons) {
+                if (btn.children.length === 0 && btn.textContent.trim() === '匯出') {
+                    targetBtn = btn;
+                    break;
                 }
-                .export-image-btn:hover {
-                    background: #219150 !important;
-                }
-                .export-image-btn:disabled {
-                    background: #bdc3c7 !important;
-                    cursor: not-allowed;
-                }
+            }
+
+            const imgBtn = document.createElement('button');
+            imgBtn.className = 'custom-image-export-btn';
+            imgBtn.innerHTML = '匯出圖片';
+            imgBtn.style.cssText = `
+                background-color: #27ae60 !important;
+                color: #ffffff !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                padding: 5px 12px !important;
+                border-radius: 4px !important;
+                cursor: pointer !important;
+                font-size: 14px !important;
+                margin-left: 6px !important;
+                margin-right: 6px !important;
+                transition: all 0.2s ease !important;
             `;
-            document.head.appendChild(style);
 
-            toolbar.appendChild(exportBtn);
+            if (targetBtn && targetBtn.parentElement) {
+                targetBtn.parentElement.insertBefore(imgBtn, targetBtn.nextSibling);
+            } else {
+                imgBtn.style.position = 'fixed';
+                imgBtn.style.top = '12px';
+                imgBtn.style.right = '220px';
+                imgBtn.style.zIndex = '999999';
+                document.body.appendChild(imgBtn);
+            }
 
-            exportBtn.addEventListener('click', async () => {
-                exportBtn.disabled = true;
-                exportBtn.innerHTML = '正在產生...';
-
-                const targetArea = document.querySelector('.container');
-
-                if (!targetArea) {
-                    alert('找不到可匯出的區域。');
-                    resetBtn();
-                    return;
-                }
+            imgBtn.addEventListener('click', async () => {
+                imgBtn.disabled = true;
+                const oldText = imgBtn.innerHTML;
+                imgBtn.innerHTML = '繪製中...';
 
                 try {
-                    const canvas = await html2canvas(targetArea, {
+                    imgBtn.style.visibility = 'hidden';
+
+                    const canvas = await html2canvas(document.body, {
                         allowTaint: true,
                         useCORS: true,
-                        scale: 2, 
-                        backgroundColor: '#f4f4f4', 
-                        logging: false, 
-                        onclone: (clonedDoc) => {
-                            const clonedTarget = clonedDoc.querySelector('.container');
-                            if (clonedTarget) {
-                                clonedTarget.style.padding = '20px';
-                                clonedTarget.style.boxShadow = 'none'; // 去掉陰影讓圖片更乾淨
-                            }
-                        }
+                        scale: 2,
+                        backgroundColor: null,
+                        logging: false
                     });
 
                     const imgData = canvas.toDataURL('image/png');
-
-                    const downloadLink = document.createElement('a');
-                    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '');
                     
-                    downloadLink.download = `Desigh-Thinking-Tools-Export_${timestamp}.png`;
-                    downloadLink.href = imgData;
+                    const link = document.createElement('a');
+                    const dateStr = new Date().toISOString().slice(0, 10);
+                    link.download = `Word_Conception_${dateStr}.png`;
+                    link.href = imgData;
                     
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
 
-                } catch (error) {
-                    console.error('匯出圖片時發生錯誤:', error);
-                    alert('匯出圖片時發生錯誤。這可能是由於安全限制，請嘗試重新整理。');
+                } catch (err) {
+                    console.error(err);
+                    alert('匯出圖片時發生錯誤：' + err.message);
                 } finally {
-                    resetBtn();
-                }
-
-                function resetBtn() {
-                    exportBtn.disabled = false;
-                    exportBtn.innerHTML = '匯出圖片';
+                    imgBtn.style.visibility = 'visible';
+                    imgBtn.disabled = false;
+                    imgBtn.innerHTML = oldText;
                 }
             });
-        });
+        }
+
+        if (document.readyState === 'interactive' || document.readyState === 'complete') {
+            initExportImage();
+        } else {
+            document.addEventListener('DOMContentLoaded', initExportImage);
+        }
+    })();
     </script>
     
 </body>
