@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Word Conception</title>
+    <!-- html2canvas library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
@@ -12,6 +13,48 @@
   --scale: 1;
   --pan-x: 0px;
   --pan-y: 0px;
+
+  /* Dark Theme Variables */
+  --bg-color: #22242e;
+  --grid-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='277.128' viewBox='0 0 160 277.128'%3E%3Cpath d='M0 0l160 277.128M0 277.128L160 0' stroke='%23677076' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  --ui-bg: #2e313d;
+  --ui-hover: #383c4a;
+  --ui-border: #677076;
+  --text-color: #ffffff;
+  --subtext-color: #a0a6b5;
+  --modal-bg: #2e313d;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.65);
+  --palette-bg: #1e2029;
+
+  /* Node Preset Colors (Dark) */
+  --default-bg: #2e313d; --default-border: #677076; --default-text: #e0e0e0;
+  --red-bg: #3a2529;     --red-border: #e74c3c;     --red-text: #ffb3b3;
+  --green-bg: #1e382b;   --green-border: #27ae60;   --green-text: #a3f0c4;
+  --blue-bg: #1f2d42;    --blue-border: #4a90e2;    --blue-text: #b3d7ff;
+  --yellow-bg: #3d341f;  --yellow-border: #f39c12;  --yellow-text: #ffe3b3;
+  --purple-bg: #342240;  --purple-border: #9b59b6;  --purple-text: #ebc2ff;
+}
+
+body.light-mode {
+  /* Light Theme Variables */
+  --bg-color: #f0f2f5;
+  --grid-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='277.128' viewBox='0 0 160 277.128'%3E%3Cpath d='M0 0l160 277.128M0 277.128L160 0' stroke='%23cbd5e1' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  --ui-bg: #ffffff;
+  --ui-hover: #f1f5f9;
+  --ui-border: #cbd5e1;
+  --text-color: #0f172a;
+  --subtext-color: #64748b;
+  --modal-bg: #ffffff;
+  --modal-overlay-bg: rgba(15, 23, 42, 0.4);
+  --palette-bg: #ffffff;
+
+  /* Node Preset Colors (Light) */
+  --default-bg: #ffffff; --default-border: #cbd5e1; --default-text: #0f172a;
+  --red-bg: #fef2f2;     --red-border: #ef4444;     --red-text: #991b1b;
+  --green-bg: #f0fdf4;   --green-border: #22c55e;   --green-text: #166534;
+  --blue-bg: #eff6ff;    --blue-border: #3b82f6;    --blue-text: #1e40af;
+  --yellow-bg: #fefce8;  --yellow-border: #eab308;  --yellow-text: #854d0e;
+  --purple-bg: #faf5ff;  --purple-border: #a855f7;  --purple-text: #6b21a8;
 }
 
 *, *::before, *::after {
@@ -23,42 +66,62 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #22242e;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 
   touch-action: none;
 
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='277.128' viewBox='0 0 160 277.128'%3E%3Cpath d='M0 0l160 277.128M0 277.128L160 0' stroke='%23677076' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-image: var(--grid-svg);
   background-repeat: repeat;
   background-position: var(--pan-x) var(--pan-y);
   background-size: calc(160px * var(--scale)) calc(277.128px * var(--scale));
 
   cursor: grab;
   user-select: none;
+  transition: background-color 0.25s ease;
 }
 
 body.is-dragging {
   cursor: grabbing;
 }
 
-.title-bar {
+.control-panel {
   position: fixed;
   top: 15px;
-  left: 15px;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.left-panel {
+  left: 15px;
+  align-items: flex-start;
+}
+
+.right-panel {
+  right: 15px;
+  align-items: flex-end;
+}
+
+.panel-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .title-input {
   height: 36px;
-  background: #2e313d;
-  color: #ffffff;
-  border: 1px solid #677076;
+  background: var(--ui-bg);
+  color: var(--text-color);
+  border: 1px solid var(--ui-border);
   border-radius: 6px;
   padding: 0 12px;
   font-size: 14px;
   font-weight: bold;
   outline: none;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.2s, background-color 0.2s;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: border-color 0.2s, background-color 0.2s, color 0.2s;
   width: 160px;
   display: flex;
   align-items: center;
@@ -66,33 +129,28 @@ body.is-dragging {
 
 .title-input:focus {
   border-color: #4a90e2;
-  background-color: #383c4a;
-}
-
-.toolbar {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  z-index: 1000;
-  display: flex;
-  gap: 8px;
+  background-color: var(--ui-hover);
 }
 
 .btn {
   height: 36px;
-  background: #2e313d;
-  color: #e0e0e0;
-  border: 1px solid #677076;
+  background: var(--ui-bg);
+  color: var(--text-color);
+  border: 1px solid var(--ui-border);
   border-radius: 6px;
   padding: 0 14px;
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.btn:hover {
+  background-color: var(--ui-hover);
 }
 
 .btn:active {
@@ -105,7 +163,7 @@ body.is-dragging {
   color: #ffffff;
 }
 
-.btn-success:active {
+.btn-success:hover {
   background: #219653;
 }
 
@@ -115,8 +173,10 @@ body.is-dragging {
   color: #ff9e9e;
 }
 
-.btn-danger:active {
-  background: #4a2d32;
+body.light-mode .btn-danger {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
 }
 
 .modal-overlay {
@@ -125,7 +185,7 @@ body.is-dragging {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--modal-overlay-bg);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
@@ -142,27 +202,26 @@ body.is-dragging {
 }
 
 .modal-box {
-  background: #2e313d;
-  border: 1px solid #677076;
+  background: var(--modal-bg);
+  border: 1px solid var(--ui-border);
   border-radius: 10px;
   padding: 20px;
-  width: 300px;
+  width: 320px;
   max-width: 85vw;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
   text-align: center;
-  color: #e0e0e0;
+  color: var(--text-color);
 }
 
 .modal-title {
   font-size: 16px;
   font-weight: bold;
   margin-bottom: 8px;
-  color: #ffffff;
 }
 
 .modal-desc {
   font-size: 13px;
-  color: #a0a6b5;
+  color: var(--subtext-color);
   margin-bottom: 20px;
   line-height: 1.5;
 }
@@ -175,8 +234,8 @@ body.is-dragging {
 
 .btn-modal-cancel {
   background: transparent;
-  border: 1px solid #677076;
-  color: #e0e0e0;
+  border: 1px solid var(--ui-border);
+  color: var(--text-color);
   flex: 1;
 }
 
@@ -202,54 +261,93 @@ body.is-dragging {
   position: absolute;
   transform: translate(-50%, -50%);
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .grid-input {
   width: 65px;
   height: 30px;
-  background: #2e313d;
-  color: #e0e0e0;
-  border: 1px solid #677076;
   border-radius: 6px;
   padding: 0 4px;
   font-size: 16px;
   font-weight: 500;
   text-align: center;
   outline: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  border: 1px solid var(--ui-border);
 }
 
+.grid-input[data-color="default"] { background-color: var(--default-bg); border-color: var(--default-border); color: var(--default-text); }
+.grid-input[data-color="red"]     { background-color: var(--red-bg);     border-color: var(--red-border);     color: var(--red-text); }
+.grid-input[data-color="green"]   { background-color: var(--green-bg);   border-color: var(--green-border);   color: var(--green-text); }
+.grid-input[data-color="blue"]    { background-color: var(--blue-bg);    border-color: var(--blue-border);    color: var(--blue-text); }
+.grid-input[data-color="yellow"]  { background-color: var(--yellow-bg);  border-color: var(--yellow-border);  color: var(--yellow-text); }
+.grid-input[data-color="purple"]  { background-color: var(--purple-bg);  border-color: var(--purple-border);  color: var(--purple-text); }
+
 .grid-input:focus {
-  border-color: #4a90e2;
-  background-color: #383c4a;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.5);
+}
+
+.color-palette {
+  position: absolute;
+  bottom: 35px;
+  display: flex;
+  gap: 6px;
+  background: var(--palette-bg);
+  border: 1px solid var(--ui-border);
+  padding: 4px 8px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+}
+
+.grid-node.active-palette .color-palette {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.15);
+  transition: transform 0.1s;
+}
+
+.color-dot:hover, .color-dot:active {
+  transform: scale(1.25);
 }
 
 @media (max-width: 650px) {
-  .title-bar {
+  .control-panel {
     top: 10px;
-    left: 10px;
-    right: 10px;
+    gap: 6px;
   }
+
+  .left-panel { left: 10px; }
+  .right-panel { right: 10px; }
+
+  .panel-row { gap: 6px; }
 
   .title-input {
-    width: 100%;
-  }
-
-  .toolbar {
-    top: 52px;
-    left: 10px;
-    right: 10px;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    white-space: nowrap;
+    width: 120px;
+    height: 32px;
+    font-size: 12px;
   }
 
   .btn {
     height: 32px;
-    font-size: 13px;
-    padding: 0 10px;
-    flex-shrink: 0;
+    font-size: 12px;
+    padding: 0 8px;
   }
 }
 </style>
@@ -258,25 +356,37 @@ body.is-dragging {
 
 <body>
 
-<div class="title-bar">
-  <input type="text" id="project-title" class="title-input" value="未命名專案" placeholder="輸入專案名稱..." onchange="autoSave()" onkeydown="if(event.key==='Enter') this.blur()">
+<!-- Left Control Panel -->
+<div class="control-panel left-panel">
+  <div class="panel-row">
+    <input type="text" id="project-title" class="title-input" value="Untitled Project" placeholder="Project Title..." onchange="autoSave()" onkeydown="if(event.key==='Enter') this.blur()">
+    <button class="btn btn-danger" onclick="showExitModal()">New Project</button>
+  </div>
+  <div class="panel-row">
+    <button class="btn" id="theme-toggle-btn" onclick="toggleTheme()">Dark Mode</button>
+  </div>
 </div>
 
-<div class="toolbar">
-  <button class="btn btn-success" id="export-img-btn" onclick="exportImage()">匯出圖片</button>
-  <button class="btn" onclick="exportData()">匯出JSON</button>
-  <button class="btn" onclick="document.getElementById('file-input').click()">匯入JSON</button>
-  <button class="btn btn-danger" onclick="showExitModal()">開新專案</button>
-  <input type="file" id="file-input" accept=".json" style="display: none;" onchange="importData(event)">
+<!-- Right Control Panel -->
+<div class="control-panel right-panel">
+  <div class="panel-row">
+    <button class="btn" onclick="exportData()">Export JSON</button>
+    <button class="btn" onclick="document.getElementById('file-input').click()">Import JSON</button>
+    <input type="file" id="file-input" accept=".json" style="display: none;" onchange="importData(event)">
+  </div>
+  <div class="panel-row">
+    <button class="btn btn-success" id="export-img-btn" onclick="exportImage()">Export Image</button>
+  </div>
 </div>
 
+<!-- Modal -->
 <div class="modal-overlay" id="exit-modal">
   <div class="modal-box">
-    <div class="modal-title">確定要退出專案？</div>
-    <div class="modal-desc">退出將會清空畫布與暫存資料。請確認是否已點選「匯出JSON」完成儲存！</div>
+    <div class="modal-title">Start New Project?</div>
+    <div class="modal-desc">Creating a new project will clear all current nodes and unsaved data. Please ensure you have exported your JSON file before continuing.</div>
     <div class="modal-actions">
-      <button class="btn btn-modal-cancel" onclick="closeExitModal()">取消</button>
-      <button class="btn btn-modal-confirm" onclick="confirmExit()">確認</button>
+      <button class="btn btn-modal-cancel" onclick="closeExitModal()">Cancel</button>
+      <button class="btn btn-modal-confirm" onclick="confirmExit()">Confirm</button>
     </div>
   </div>
 </div>
@@ -299,14 +409,39 @@ body.is-dragging {
   const nodesLayer = document.getElementById('nodes-layer');
   const projectTitleInput = document.getElementById('project-title');
   const exitModal = document.getElementById('exit-modal');
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
   const nodesMap = new Map();
 
   const COL_WIDTH = 160;
   const ROW_HEIGHT = 138.564;
   const HALF_COL = COL_WIDTH / 2;
 
+  const COLOR_PRESETS = {
+    default: { dot: '#677076' },
+    red:     { dot: '#e74c3c' },
+    green:   { dot: '#27ae60' },
+    blue:    { dot: '#4a90e2' },
+    yellow:  { dot: '#f39c12' },
+    purple:  { dot: '#9b59b6' }
+  };
+
+  function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-mode');
+    updateThemeUI(isLight);
+    autoSave();
+  }
+
+  function updateThemeUI(isLight) {
+    if (themeToggleBtn) {
+      themeToggleBtn.innerHTML = isLight ? 'Light Mode' : 'Dark Mode';
+    }
+  }
+
   function isUIElement(target) {
-    return target.tagName === 'INPUT' && !target.classList.contains('grid-input') || target.closest('.toolbar') || target.closest('.title-bar') || target.closest('.modal-overlay');
+    return (target.tagName === 'INPUT' && !target.classList.contains('grid-input')) || 
+           target.closest('.control-panel') || 
+           target.closest('.modal-overlay') ||
+           target.closest('.color-palette');
   }
 
   function showExitModal() {
@@ -325,7 +460,7 @@ body.is-dragging {
 
     localStorage.removeItem('word_conception_data');
 
-    projectTitleInput.value = '未命名專案';
+    projectTitleInput.value = 'Untitled Project';
     scale = 1;
     panX = 0;
     panY = 0;
@@ -467,24 +602,56 @@ body.is-dragging {
     };
   }
 
-  function createNode(x, y, key, text = '') {
+  function applyNodeColor(inputEl, colorKey) {
+    inputEl.dataset.color = colorKey || 'default';
+  }
+
+  function createNode(x, y, key, text = '', color = 'default') {
     const node = document.createElement('div');
     node.className = 'grid-node';
     node.style.left = `${x}px`;
     node.style.top = `${y}px`;
 
+    const palette = document.createElement('div');
+    palette.className = 'color-palette';
+    
+    Object.keys(COLOR_PRESETS).forEach(colorKey => {
+      const dot = document.createElement('div');
+      dot.className = 'color-dot';
+      dot.style.backgroundColor = COLOR_PRESETS[colorKey].dot;
+
+      const selectColor = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        applyNodeColor(input, colorKey);
+        autoSave();
+      };
+
+      dot.addEventListener('mousedown', selectColor);
+      dot.addEventListener('touchstart', selectColor);
+      palette.appendChild(dot);
+    });
+
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'grid-input';
     input.maxLength = 4;
-    input.placeholder = '文字';
+    input.placeholder = 'Text';
     input.value = text;
+
+    applyNodeColor(input, color);
+
+    input.addEventListener('focus', () => {
+      node.classList.add('active-palette');
+    });
 
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === 'Escape') input.blur();
     });
 
     input.addEventListener('blur', () => {
+      setTimeout(() => node.classList.remove('active-palette'), 150);
+
       if (input.value.trim() === '') {
         node.remove();
         nodesMap.delete(key);
@@ -492,6 +659,7 @@ body.is-dragging {
       autoSave();
     });
 
+    node.appendChild(palette);
     node.appendChild(input);
     nodesLayer.appendChild(node);
     nodesMap.set(key, node);
@@ -511,13 +679,20 @@ body.is-dragging {
       const input = nodeEl.querySelector('input');
       const text = input.value.trim();
       if (text) {
-        nodesData.push({ key, x: parseFloat(nodeEl.style.left), y: parseFloat(nodeEl.style.top), text });
+        nodesData.push({ 
+          key, 
+          x: parseFloat(nodeEl.style.left), 
+          y: parseFloat(nodeEl.style.top), 
+          text,
+          color: input.dataset.color || 'default'
+        });
       }
     });
 
-    const title = projectTitleInput.value.trim() || '未命名專案';
+    const title = projectTitleInput.value.trim() || 'Untitled Project';
+    const isLight = document.body.classList.contains('light-mode');
 
-    return { title, panX, panY, scale, nodes: nodesData };
+    return { title, theme: isLight ? 'light' : 'dark', panX, panY, scale, nodes: nodesData };
   }
 
   function exportData() {
@@ -544,7 +719,7 @@ body.is-dragging {
         loadDataObject(JSON.parse(evt.target.result));
         autoSave();
       } catch (err) {
-        alert('檔案讀取失敗，請確認格式是否正確！');
+        alert('Failed to load file. Please check if the format is valid.');
       }
     };
     reader.readAsText(file);
@@ -555,7 +730,15 @@ body.is-dragging {
     nodesLayer.innerHTML = '';
     nodesMap.clear();
 
-    projectTitleInput.value = data.title || '未命名專案';
+    projectTitleInput.value = data.title || 'Untitled Project';
+
+    const isLight = data.theme === 'light';
+    if (isLight) {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
+    }
+    updateThemeUI(isLight);
 
     if (data.scale !== undefined) scale = data.scale;
     if (data.panX !== undefined) panX = data.panX;
@@ -563,7 +746,7 @@ body.is-dragging {
     updateView();
 
     if (Array.isArray(data.nodes)) {
-      data.nodes.forEach(n => createNode(n.x, n.y, n.key, n.text));
+      data.nodes.forEach(n => createNode(n.x, n.y, n.key, n.text, n.color || 'default'));
     }
   }
 
@@ -579,32 +762,79 @@ body.is-dragging {
   });
 
   async function exportImage() {
+    if (nodesMap.size === 0) {
+      alert('No nodes on canvas to export!');
+      return;
+    }
+
     const btn = document.getElementById('export-img-btn');
     btn.disabled = true;
     const oldText = btn.innerHTML;
-    btn.innerHTML = '⌛ 繪製中...';
+    btn.innerHTML = 'Exporting...';
 
     try {
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+      nodesMap.forEach((nodeEl) => {
+        const x = parseFloat(nodeEl.style.left);
+        const y = parseFloat(nodeEl.style.top);
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      });
+
+      const nodePaddingX = 40;
+      const nodePaddingY = 25;
+      const outerPadding = 80;
+
+      const cropMinX = minX - nodePaddingX - outerPadding;
+      const cropMaxX = maxX + nodePaddingX + outerPadding;
+      const cropMinY = minY - nodePaddingY - outerPadding;
+      const cropMaxY = maxY + nodePaddingY + outerPadding;
+
+      const exportWidth = Math.ceil(cropMaxX - cropMinX);
+      const exportHeight = Math.ceil(cropMaxY - cropMinY);
+
+      const isLight = document.body.classList.contains('light-mode');
+      const exportBgColor = isLight ? '#f0f2f5' : '#22242e';
+
       const canvas = await html2canvas(document.body, {
         allowTaint: true,
         useCORS: true,
         scale: 2,
-        backgroundColor: '#22242e',
-        scrollX: 0,
-        scrollY: 0,
-        x: 0,
-        y: 0,
-        width: window.innerWidth,
-        height: window.innerHeight,
+        backgroundColor: exportBgColor,
+        width: exportWidth,
+        height: exportHeight,
+        windowWidth: exportWidth,
+        windowHeight: exportHeight,
         logging: false,
         onclone: (clonedDoc) => {
-          const toolbar = clonedDoc.querySelector('.toolbar');
-          const titleBar = clonedDoc.querySelector('.title-bar');
+          clonedDoc.querySelectorAll('.control-panel').forEach(p => p.style.display = 'none');
+          
           const modal = clonedDoc.querySelector('.modal-overlay');
-
-          if (toolbar) toolbar.style.display = 'none';
-          if (titleBar) titleBar.style.display = 'none';
           if (modal) modal.style.display = 'none';
+
+          clonedDoc.querySelectorAll('.color-palette').forEach(p => p.style.display = 'none');
+
+          const clonedHtml = clonedDoc.documentElement;
+          const clonedBody = clonedDoc.body;
+
+          clonedHtml.style.width = `${exportWidth}px`;
+          clonedHtml.style.height = `${exportHeight}px`;
+          clonedHtml.style.overflow = 'visible';
+
+          clonedBody.style.width = `${exportWidth}px`;
+          clonedBody.style.height = `${exportHeight}px`;
+          clonedBody.style.overflow = 'visible';
+
+          const clonedNodesLayer = clonedDoc.getElementById('nodes-layer');
+          if (clonedNodesLayer) {
+            clonedNodesLayer.style.transform = `translate(${-cropMinX}px, ${-cropMinY}px) scale(1)`;
+          }
+
+          clonedBody.style.backgroundPosition = `${-cropMinX}px ${-cropMinY}px`;
+          clonedBody.style.backgroundSize = `160px 277.128px`;
         }
       });
 
@@ -613,13 +843,13 @@ body.is-dragging {
         btn.innerHTML = oldText;
 
         if (!blob) {
-          alert('圖片產生失敗');
+          alert('Failed to generate image.');
           return;
         }
 
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        const rawTitle = projectTitleInput.value.trim() || '未命名專案';
+        const rawTitle = projectTitleInput.value.trim() || 'Untitled Project';
         const safeTitle = rawTitle.replace(/[/\\?%*:|"<>]/g, '_');
         const dateStr = new Date().toISOString().slice(0, 10);
 
@@ -640,7 +870,7 @@ body.is-dragging {
 
     } catch (err) {
       console.error(err);
-      alert('匯出圖片時發生錯誤：' + err.message);
+      alert('Error exporting image: ' + err.message);
       btn.disabled = false;
       btn.innerHTML = oldText;
     }
