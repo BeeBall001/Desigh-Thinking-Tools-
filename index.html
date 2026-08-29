@@ -122,7 +122,7 @@ body.is-dragging {
   outline: none;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   transition: border-color 0.2s, background-color 0.2s, color 0.2s;
-  width: 160px;
+  width: 150px;
   display: flex;
   align-items: center;
 }
@@ -138,8 +138,8 @@ body.is-dragging {
   color: var(--text-color);
   border: 1px solid var(--ui-border);
   border-radius: 6px;
-  padding: 0 14px;
-  font-size: 14px;
+  padding: 0 12px;
+  font-size: 13px;
   font-weight: bold;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
@@ -147,6 +147,7 @@ body.is-dragging {
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  white-space: nowrap;
 }
 
 .btn:hover {
@@ -327,27 +328,37 @@ body.light-mode .btn-danger {
   transform: scale(1.25);
 }
 
+/* 響應式手機佈局修正 */
 @media (max-width: 650px) {
   .control-panel {
     top: 10px;
     gap: 6px;
+    max-width: calc(50vw - 12px);
   }
 
-  .left-panel { left: 10px; }
-  .right-panel { right: 10px; }
+  .left-panel { left: 8px; }
+  .right-panel { right: 8px; }
 
-  .panel-row { gap: 6px; }
+  .panel-row {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .right-panel .panel-row {
+    justify-content: flex-end;
+  }
 
   .title-input {
-    width: 120px;
-    height: 32px;
-    font-size: 12px;
+    width: 105px;
+    height: 30px;
+    font-size: 11px;
+    padding: 0 6px;
   }
 
   .btn {
-    height: 32px;
-    font-size: 12px;
-    padding: 0 8px;
+    height: 30px;
+    font-size: 11px;
+    padding: 0 6px;
   }
 }
 </style>
